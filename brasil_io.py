@@ -76,6 +76,7 @@ if __name__ == "__main__":
     response = api.download(dataset_slug, table_name)
     fobj = io.TextIOWrapper(gzip.GzipFile(fileobj=response), encoding="utf-8")
     reader = csv.DictReader(fobj)
+    ## comentario
     #for row in reader:
     #    print(row)
         #pass  # faça algo com `row`

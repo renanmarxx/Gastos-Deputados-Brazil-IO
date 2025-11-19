@@ -1,0 +1,29 @@
+name: upload-csv-to-s3
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  id-token: write         # necessário para OIDC
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-s3-uploader
+          aws-region: sa-east-1
+
+      - name: Generate CSV
+        run: |
+          # seu script que consome API e produz /tmp/data.csv
+          python scripts/fetch_api_to_csv.py /tmp/data.csv
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp /tmp/data.csv s3://meu-bucket/ingest/ci-run/${{ github.run_id }}.csv

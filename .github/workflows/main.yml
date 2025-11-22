@@ -1,7 +1,5 @@
-# Initial workflow name
-name: Connect to an AWS role from a GitHub repository
+name: Main workflow for CI/CD validations
 
-# Controls when actions will be executed. Invokes the workflow on push events, but only for the main branch.
 on:
   push:
     branches: [ main ]
@@ -25,7 +23,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: arn:aws:iam::535942231592:role/GitHub_Actions_Personal # altere para a ARN da sua IAM role
+          role-to-assume: arn:aws:iam::535942231592:role/GitHub_Actions_Personal
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
       
@@ -97,7 +95,3 @@ jobs:
                 \"aws_session_token\": \"${AWS_SESSION_TOKEN}\"
               }
             }"
-          
-# Observações 1:
-# s3://gastos-deputados-brasil-io/landing-bucket-gastos-deputados-brasil-io/
-# s3://renan-marx-data-engineering-projects/gastos-deputados-brasil-io/landing-bucket-gastos-deputados-brasil-io/

@@ -74,6 +74,18 @@ jobs:
       - name: Upload to S3 
         run: |
           aws s3 cp data/gastos-deputados_cota_parlamentar.csv.gz ${{ secrets.LANDING_BUCKET_INGESTION }}
+      
+      ###############################################################
+      # ➤ GERAR CREDENCIAIS TEMPORÁRIAS (STS) PARA O DATABRICKS
+      ###############################################################
+      - name: Generate temporary AWS STS credentials for Databricks
+        id: stscreds
+        run: |
+          CREDS=$(aws sts get-session-token --duration-seconds 900)
+          echo "AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .Credentials.AccessKeyId)" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .Credentials.SecretAccessKey)" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Credentials.SessionToken)" >> $GITHUB_ENV
+          echo "AWS_EXPIRATION=$(echo $CREDS | jq -r .Credentials.Expiration)" >> $GITHUB_ENV
           
           
 # Observações 1:

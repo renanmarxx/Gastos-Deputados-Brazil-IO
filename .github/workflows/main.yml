@@ -28,6 +28,14 @@ jobs:
           role-to-assume: arn:aws:iam::535942231592:role/GitHub_Actions_Personal # altere para a ARN da sua IAM role
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Use credentials directly
+        run: |
+          export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+          export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
+
+          echo "Temporary valid credentials sent to Databricks environment"
 
       - name: STS GetCallerIdentity
         run: aws sts get-caller-identity
@@ -74,7 +82,35 @@ jobs:
       - name: Upload to S3 
         run: |
           aws s3 cp data/gastos-deputados_cota_parlamentar.csv.gz ${{ secrets.LANDING_BUCKET_INGESTION }}
+      
+      ###############################################################
+      # ➤ GERAR CREDENCIAIS TEMPORÁRIAS (STS) PARA O DATABRICKS
+      ###############################################################
+      #- name: Generate temporary AWS STS credentials for Databricks
+      #  id: stscreds
+      #  run: |
+      #    CREDS=$(aws sts get-session-token --duration-seconds 900)
+      #    echo "AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .Credentials.AccessKeyId)" >> $GITHUB_ENV
+      #    echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .Credentials.SecretAccessKey)" >> $GITHUB_ENV
+      #    echo "AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Credentials.SessionToken)" >> $GITHUB_ENV
+      #    echo "AWS_EXPIRATION=$(echo $CREDS | jq -r .Credentials.Expiration)" >> $GITHUB_ENV
           
+      ###############################################################
+      # ➤ CHAMAR UM JOB NO DATABRICKS E PASSAR AS CREDENCIAIS TEMPORÁRIAS
+      ###############################################################
+      - name: Trigger Databricks Ingestion Job with STS credentials
+        run: |
+          curl -X POST "${{ secrets.DATABRICKS_WORKSPACE_URL }}/api/2.1/jobs/run-now" \
+            -H "Authorization: Bearer ${{ secrets.DATABRICKS_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"job_id\": \"${{ secrets.DATABRICKS_JOB_ID }}\",
+              \"notebook_params\": {
+                \"aws_access_key\": \"${AWS_ACCESS_KEY_ID}\",
+                \"aws_secret_key\": \"${AWS_SECRET_ACCESS_KEY}\",
+                \"aws_session_token\": \"${AWS_SESSION_TOKEN}\"
+              }
+            }"
           
 # Observações 1:
 # s3://gastos-deputados-brasil-io/landing-bucket-gastos-deputados-brasil-io/

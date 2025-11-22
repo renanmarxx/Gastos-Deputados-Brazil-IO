@@ -56,12 +56,19 @@ jobs:
       - name: Install dependencies (Poetry)
         run: |
           poetry install --no-interaction --no-ansi --no-root
+      
+      - name: Activating Poetry Shell (virtual environment)
+        run: |
+          poetry env activate
+
+      - name: Run black on python files
+        run: |
+          poetry run black scripts/brasil_io.py
 
       - name: Generate CSV
         env:
           BRASIL_IO_TOKEN: ${{ secrets.BRASIL_IO_TOKEN }}
         run: |
-          # script writes output to data/ by default
           poetry run python scripts/brasil_io.py
 
       - name: Upload to S3 

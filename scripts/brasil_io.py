@@ -7,8 +7,6 @@ import shutil
 from urllib.parse import urlencode, urljoin
 from urllib.request import Request, urlopen
 
-a+b
-
 class BrasilIO:
 
     base_url = "https://api.brasil.io/v1/"
